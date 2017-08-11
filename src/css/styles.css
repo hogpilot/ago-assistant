@@ -215,3 +215,11 @@ body {
 .panel-title {
     display: block;
 }
+
+.jsonError .hljs-ln-code {
+   background-color: lightpink;
+}
+
+.dropBorder.ui-state-active {
+    border: #4cae4c 2px dashed;
+}
