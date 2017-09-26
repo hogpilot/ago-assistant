@@ -194,7 +194,7 @@ require([
         // loginBtnEl is used to disable the login button when portal url is invalid
         "use strict";
         var inputUrl = jquery.trim(jquery(el).val());
-        portalSelf.util.fixUrl(inputUrl).then(function(portalUrl) {
+        portalSelf.util.fixUrlAsync(inputUrl).then(function(portalUrl) {
             jquery(el).val(portalUrl);
             var urlError = jquery("#urlErrorTemplate").html();
             var checkbox = jquery(el).parent().parent()
@@ -361,7 +361,7 @@ require([
             storePortal(portalItm);
         };
         esriId.registerOAuthInfos([portalInfo]);
-        portalSelf.util.fixUrl(portalInfo.portalUrl).then(function(portalUrl) {
+        portalSelf.util.fixUrlAsync(portalInfo.portalUrl).then(function(portalUrl) {
             var sharingUrl = portalUrl;
             if (sharingUrl.indexOf("arcgis.com") === -1) {
                 sharingUrl += "sharing/";
@@ -499,7 +499,7 @@ require([
         esriId.destroyCredentials();
         sessionStorage.removeItem("esriJSAPIOAuth");
 
-        portalSelf.util.fixUrl(portalInfo.portalUrl).then(function(portalUrl) {
+        portalSelf.util.fixUrlAsync(portalInfo.portalUrl).then(function(portalUrl) {
             var sharingUrl = portalUrl;
             if (sharingUrl.indexOf("arcgis.com") === -1) {
                 sharingUrl += "sharing/";
@@ -846,12 +846,14 @@ require([
              *  item.  Looks for a period in the name to indicate
              *  that it is a file based item, e.g. roads.kmz.
              */
-            var checkData = function(id, name){
+            var checkData = function(id, name) {
                 return new Promise(function(resolve, reject) {
-                    if ((!name) || ((name) && (name.indexOf('.') < 0))) {
+                    if ((!name) || ((name) && (name.indexOf(".") < 0))) {
                         resolve(portal.itemData(id));
                     }
-                    else { resolve(null); }
+                    else {
+                        resolve(null);
+                    }
                 });
             };
 
@@ -2211,7 +2213,7 @@ require([
 
         // Check for previously authenticated sessions.
         esriId.registerOAuthInfos([appInfo]);
-        portalSelf.util.fixUrl(appInfo.portalUrl).then(function(portalUrl) {
+        portalSelf.util.fixUrlAsync(appInfo.portalUrl).then(function(portalUrl) {
             /*
              * Build the sharingUrl. This is necessary because esriId automatically
              * appends /sharing to the portalUrl when it contains arcgis.com.
