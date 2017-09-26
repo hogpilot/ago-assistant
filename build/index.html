@@ -112,7 +112,7 @@
                         <div class="modal-header">
                             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
                             <h3 id="copyModalLabel">About this application</h3>
-                            <p class="text-muted">v2.7.2 <a href="https://github.com/esri/ago-assistant/releases" target="_blank">changelog</a></p>
+                            <p class="text-muted">v2.8.1 <a href="https://github.com/esri/ago-assistant/releases" target="_blank">changelog</a></p>
                         </div>
                         <div class="modal-body">
                             <p>This app uses the <a href="http://resources.arcgis.com/en/help/arcgis-rest-api/index.html#/Working_with_users_groups_and_items/02r3000000mt000000/" target="_blank">ArcGIS REST API</a> to help you work with your ArcGIS Online and Portal for ArcGIS accounts and content.</p>
@@ -461,6 +461,7 @@
                     {name: "jquery.ui", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib", main: "jquery-ui-1.11.4.min"},
                     {name: "jquery.bootstrap", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib/bootstrap/js", main: "bootstrap-3.3.4.min"},
                     {name: "bootstrap-shim", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib", main: "bootstrap-shim"},
+                    {name: "bootstrap-notify", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib", main: "bootstrap-notify.min"},
                     {name: "mustache", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib", main: "mustache-0.7.2"},
                     {name: "nprogress", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib", main: "nprogress-0.1.6"},
                     {name: "highlight", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib", main: "highlight-8.3.min"},
@@ -475,7 +476,8 @@
     </body>
 
 </html>
-;<script type="text/template" id="sessionTemplate">
+
+<script type="text/template" id="sessionTemplate">
 
     <ul class="nav navbar-nav navbar-right" id="sessionDropdown">
         <li class="dropdown">
