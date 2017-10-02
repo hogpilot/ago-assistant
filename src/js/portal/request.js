@@ -16,9 +16,12 @@ function get(url, parameters, options) {
                 } else {
                     response = JSON.parse(xhr.response);
                 }
-
-                // Resolve the promise with the response.
-                resolve(response);
+                if (response.error) {
+                    reject(Error(response.error));
+                } else {
+                    // Resolve the promise with the response.
+                    resolve(response);
+                }
             } else if (xhr.readyState === 4 && xhr.status == 500) {
                 reject(Error(xhr));
             }
@@ -62,8 +65,12 @@ function post(url, data, options) {
                     response = JSON.parse(xhr.response);
                 }
 
-                // Resolve the promise with the response.
-                resolve(response);
+                if (response.error) {
+                    reject(Error(response.error));
+                } else {
+                    // Resolve the promise with the response.
+                    resolve(response);
+                }
             } else if (xhr.readyState === 4 && xhr.status == 500) {
                 reject(Error(xhr));
             }

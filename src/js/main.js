@@ -40,7 +40,7 @@ require([
             })
         }
     };
-
+    window.app = app;
     // used for reading portal and appid from url string
     var getUrlParameter = function getUrlParameter(sParam) {
         var sPageURL = decodeURIComponent(window.location.search.substring(1)),
@@ -153,6 +153,8 @@ require([
                 validateUrl("#portalUrl", app.portals.sourcePortal, "#portalLoginBtn");
                 if (itm.appId) {
                     jquery("#oauthTabBtn").trigger("click");
+                } else if (itm.usePkiIwa) {
+                    jquery("#pkiIwaTabBtn").trigger("click");
                 } else {
                     jquery("#userPassTabBtn").trigger("click");
                     jquery("#portalUsername").focus();
@@ -167,6 +169,8 @@ require([
                 validateUrl("#destinationUrl", app.portals.destinationPortal, "#destinationLoginBtn");
                 if (itm.appId) {
                     jquery("#oauthTab2Btn").trigger("click");
+                } else if (itm.usePkiIwa) {
+                    jquery("#pkiIwaTab2Btn").trigger("click");
                 } else {
                     jquery("#userPassTab2Btn").trigger("click");
                     jquery("#destinationUsername").focus();
@@ -193,106 +197,63 @@ require([
     var validateUrl = function(el, portal, loginBtnEl) {
         // loginBtnEl is used to disable the login button when portal url is invalid
         "use strict";
-        var inputUrl = jquery.trim(jquery(el).val());
-        portalSelf.util.fixUrlAsync(inputUrl).then(function(portalUrl) {
-            jquery(el).val(portalUrl);
-            var urlError = jquery("#urlErrorTemplate").html();
-            var checkbox = jquery(el).parent().parent()
-                .find("input[type='checkbox']");
-            jquery(el).parent().removeClass("has-error");
-            jquery(el).next().removeClass("glyphicon-ok");
+        var portalUrl = portalSelf.util.fixUrl(jquery.trim(jquery(el).val()));
+        jquery(el).val(portalUrl);
+        var urlError = jquery("#urlErrorTemplate").html();
+        jquery(el).parent().removeClass("has-error");
+        jquery(el).next().removeClass("glyphicon-ok");
 
-            portal.portalUrl = portalUrl;
-            portal.version()
-                .then(function(data) {
-                    console.info("API v" + data.currentVersion);
-                    jquery(".alert-danger.alert-dismissable").remove();
-                    jquery(el).next().addClass("glyphicon-ok");
-                    jquery(loginBtnEl).removeAttr("disabled");
-                })
-                .catch(function() {
-                    // Try it again with enterprise auth.
-                    portal.withCredentials = true;
-                    portal.version()
-                        .then(function(data) {
-                            console.info("API v" + data.currentVersion);
-                            jquery(".alert-danger.alert-dismissable").remove();
-                            jquery(el).next().addClass("glyphicon-ok");
-                            jquery(loginBtnEl).removeAttr("disabled");
-                            jquery(checkbox).trigger("click");
-                        })
-                        .catch(function() {
-                            // Now try enterprise auth with jsonp so crossdomain will follow redirects.
-                            portal.jsonp = true;
-                            portal.version().then(function(data) {
-                                // It worked so keep enterprise auth but turn jsonp back off.
-                                portal.jsonp = false;
-                                console.info("API v" + data.currentVersion);
-                                jquery(".alert-danger.alert-dismissable").remove();
-                                jquery(el).next().addClass("glyphicon-ok");
-                                jquery(loginBtnEl).removeAttr("disabled");
-                            }).catch(function() {
-                                // OK, it's really not working.
-                                portal.withCredentials = false;
-                                portal.jsonp = false;
-                                jquery(".alert-danger.alert-dismissable").remove();
-                                jquery(el).parent().parent().after(urlError);
-                                jquery(el).parent().addClass("has-error");
-                                jquery(loginBtnEl).attr("disabled", true);
-                            });
-                        });
-                });
-        });
+        portal.portalUrl = portalUrl;
+        portal.version().then(
+            function() {
+                var iwaTab = (portal == app.portals.sourcePortal) ? jquery("#pkiIwaTabBtn") : jquery("#pkiIwaTab2Btn");
+                jquery(".alert-danger.alert-dismissable").remove();
+                jquery(el).next().addClass("glyphicon-ok");
+                jquery(loginBtnEl).removeAttr("disabled");
+                if (portal.withCredentials) {
+                    iwaTab.trigger("click");
+                }
+            },
+            function() {
+                jquery(".alert-danger.alert-dismissable").remove();
+                jquery(el).parent().parent().after(urlError);
+                jquery(el).parent().addClass("has-error");
+                jquery(loginBtnEl).attr("disabled", true);
+            }
+        );
     };
 
     var startSession = function() {
         "use strict";
-        var searchHtml;
-        app.portals.sourcePortal.self().then(function(data) {
-            var template = jquery("#sessionTemplate").html();
-            var html = mustache.to_html(template, data);
-            app.portals.sourcePortal.username = data.user.username;
-            if (data.isPortal === true) {
-                // Portal.
-                app.portals.sourcePortal.portalUrl = "https://" + data.portalHostname + "/";
-            } else if (data.isPortal === false && data.id) {
-                // ArcGIS Online Org.
-                // Set it to the org's custom URL instead of www.arcgis.com.
-                app.portals.sourcePortal.portalUrl = "https://" + data.urlKey + "." + data.customBaseUrl + "/";
-            } else {
-                // ArcGIS Online personal account.
-                app.portals.sourcePortal.portalUrl = "https://www.arcgis.com/";
-            }
-
-            jquery(".nav.navbar-nav").after(html);
-            jquery("#logout").show();
-            jquery("#actionDropdown").css({
-                visibility: "visible"
-            });
-            searchHtml = mustache.to_html(jquery("#searchTemplate").html(), {
-                portal: app.portals.sourcePortal.portalUrl,
-                name: data.name,
-                id: data.id
-            });
-            jquery("#actionDropdown").before(searchHtml);
-
-            // Add a listener for clicking the search icon.
-            // Fix me.
-            jquery(document).on("click", "i.glyphicon-search", function() {
-                search();
-            });
-
-            // Add a listener for the enter key on the search form.
-            jquery("#searchForm").keypress(function(e) {
-                if (e.which == 13) {
-                    search();
-                }
-            });
-
-            NProgress.start();
-            listUserItems();
-            NProgress.done();
+        var portal = app.portals.sourcePortal;
+        jquery(".nav.navbar-nav").after(
+            mustache.to_html(jquery("#sessionTemplate").html(), portal)
+        );
+        jquery("#logout").show();
+        jquery("#actionDropdown").css({
+            visibility: "visible"
         });
+
+        jquery("#actionDropdown").before(
+            mustache.to_html(jquery("#searchTemplate").html(), portal)
+        );
+
+        // Add a listener for clicking the search icon.
+        // Fix me.
+        jquery(document).on("click", "i.glyphicon-search", function() {
+            search();
+        });
+
+        // Add a listener for the enter key on the search form.
+        jquery("#searchForm").keypress(function(e) {
+            if (e.which == 13) {
+                search();
+            }
+        });
+
+        NProgress.start();
+        listUserItems();
+        NProgress.done();
     };
 
     var loginPortal = function() {
@@ -319,23 +280,17 @@ require([
         var username = jquery("#portalUsername").val();
         var password = jquery("#portalPassword").val();
         jquery("#portalLoginBtn").button("loading");
-        app.portals.sourcePortal.generateToken(username, password)
-            .then(function(response) {
-                if (response.token) {
-                    app.portals.sourcePortal.token = response.token;
-                    jquery("#portalLoginModal").modal("hide");
-                    jquery("#splashContainer").css("display", "none");
-                    jquery("#itemsContainer").css("display", "block");
-                    startSession();
-                    store();
-                } else if (response.error.code === 400) {
-                    var html = jquery("#loginErrorTemplate").html();
-                    jquery(".alert-danger.alert-dismissable").remove();
-                    jquery("#portalLoginForm").before(html);
-                }
+        app.portals.sourcePortal.generateToken(username, password).then(
+            function(response) {
+                app.portals.sourcePortal.token = response.token;
+                jquery("#portalLoginModal").modal("hide");
+                jquery("#splashContainer").css("display", "none");
+                jquery("#itemsContainer").css("display", "block");
+                startSession();
+                store();
                 jquery("#portalLoginBtn").button("reset");
-            })
-            .catch(function() {
+            },
+            function() {
                 jquery("#portalLoginBtn").button("reset");
                 var html = jquery("#loginErrorTemplate").html();
                 jquery(".alert-danger.alert-dismissable").remove();
@@ -426,13 +381,14 @@ require([
                 useUserPass: !app.portals.destinationPortal.withCredentials
             };
             storePortal(portalItm);
-        };        jquery("#destinationLoginBtn").button("loading");
+        };
+        jquery("#destinationLoginBtn").button("loading");
         jquery("#dropArea").empty();
-        app.portals.destinationPortal.generateToken(username, password)
-            .then(function(response) {
-                if (response.token) {
-                    app.portals.destinationPortal.token = response.token;
-                    app.portals.destinationPortal.self().then(function(data) {
+        app.portals.destinationPortal.generateToken(username, password).then(
+            function(response) {
+                app.portals.destinationPortal.token = response.token;
+                app.portals.destinationPortal.self().then(
+                    function(data) {
                         app.portals.destinationPortal.username = data.user.username;
                         if (data.isPortal === true) {
                             // Portal.
@@ -452,21 +408,16 @@ require([
                         showDestinationFolders();
                         NProgress.done();
                         store();
-                    });
-                } else if (response.error.code === 400) {
-                    var html = jquery("#loginErrorTemplate").html();
-                    jquery(".alert-danger.alert-dismissable").remove();
-                    jquery("#destinationLoginForm").before(html);
-                }
-            })
-            .catch(function() {
+                    }
+                );
+            },
+            function() {
                 var html = jquery("#loginErrorTemplate").html();
                 jquery(".alert-danger.alert-dismissable").remove();
                 jquery("#destinationLoginForm").before(html);
-            })
-            .then(function() {
                 jquery("#destinationLoginBtn").button("reset");
-            });
+            }
+        );
     };
 
     var loginDestinationOAuth = function() {
@@ -1811,42 +1762,6 @@ require([
         }
     };
 
-//    var isTypeText = function(type) {
-//        var textTypes = [
-//            "Web Map",
-//            "Feature Collection",
-//            "Feature Collection Template",
-//            "Operation View",
-//            "Symbol Set",
-//            "Color Set",
-//            "Document Link"
-//        ];
-//        if (jquery.inArray(type, textTypes) > -1) {
-//            return true;
-//        }
-//    };
-//
-//    var isTypeUrl = function(type) {
-//        var urlTypes = [
-//            "Feature Service",
-//            "Map Service",
-//            "Image Service",
-//            "KML",
-//            "WMS",
-//            "Geodata Service",
-//            "Globe Service",
-//            "Geometry Service",
-//            "Geocoding Service",
-//            "Network Analysis Service",
-//            "Geoprocessing Service",
-//            "Web Mapping Application",
-//            "Mobile Application"
-//        ];
-//        if (jquery.inArray(type, urlTypes) > -1) {
-//            return true;
-//        }
-//    };
-
     /**
      * sortArrayAlpha() sorts an array of objects in-place alphabetically based on a specified object property.
      * @param (array) array - array of objects to sort
@@ -2252,6 +2167,8 @@ require([
                             if (appid) {
                                 jquery("#portalAppId").val(appid);
                                 jquery("#oauthTabBtn").trigger("click");
+                            } else if (portal.withCredentials) {
+                                jquery("#pkiIwaTabBtn").trigger("click");
                             }
                         }
                     }

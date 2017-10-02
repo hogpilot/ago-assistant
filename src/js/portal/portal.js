@@ -20,14 +20,21 @@ export class Portal {
         this.items = [];
         this.services = [];
 
+        // Portal properties set once the user signs in.
+        this.user = {};
+        this.name = "";
+        this.id = "";
+
         // Core portal methods.
         this.generateToken = core.generateToken;
         this.search = core.search;
         this.self = core.self;
+        this.signIn = core.signIn;
         this.version = core.version;
 
         // User methods.
         this.userContent = users.userContent;
+        this.userContentAll = users.userContentAll;
         this.userProfile = users.userProfile;
 
         // Content methods.

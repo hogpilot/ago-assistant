@@ -18,5 +18,18 @@ export function generateToken(username, password) {
     let options = {
         withCredentials: portal.withCredentials
     };
-    return request.post(url, payload, options);
+    return new Promise(function(resolve, reject) {
+        request.post(url, payload, options).then(
+            (response) => {
+                if (response.token) {
+                    resolve(response);
+                } else if (response.error) {
+                    reject(response);
+                }
+            },
+            (error)  => {
+                reject(error);
+            }
+        );
+    });
 }
