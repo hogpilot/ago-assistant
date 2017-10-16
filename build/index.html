@@ -464,12 +464,12 @@
                     {name: "bootstrap-notify", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib", main: "bootstrap-notify.min"},
                     {name: "mustache", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib", main: "mustache-0.7.2"},
                     {name: "nprogress", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib", main: "nprogress-0.1.6"},
-                    {name: "highlight", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib", main: "highlight-8.3.min"},
                     {name: "clipboard", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib", main: "clipboard-1.5.15.min"},
                     {name: "portal", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib", main: "portal.min"}
                 ],
             };
         </script>
+        <script src="js/lib/ace/ace.js"></script>
         <script src="js/lib/arcgis/dojo/dojo.js"></script>
         <script src="js/main.min.js"></script>
 
@@ -641,14 +641,14 @@
                     <a href="{{ url }}/home/item.html?id={{ id }}" target="_blank"> (View Item Details)</a>
                 </li>
                 <li class="list-group-item">
-                    <div class="btn-group btn-group-lg edit-controls" role="group">
-                      <button type="button" class="btn btn-default" data-clipboard-target="#descriptionJson" aria-label="Left Align">
+                    <div class="btn-group btn-group edit-controls" role="group">
+                      <button type="button" class="btn btn-default" data-clipboard-target="#descriptionJson" title="Copy JSON" aria-label="Left Align">
                         <span class="fa fa-lg fa-clipboard" aria-hidden="true"></span>
                       </button>
-                        <button type="button" class="btn btn-default disabled" data-action="saveEdits">
+                        <button type="button" class="btn btn-default disabled" data-action="saveEdits" aria-label="Left Align">
                             <span class="fa fa-lg fa-save" aria-hidden="true"></span>
                         </button>
-                        <button type="button" class="btn btn-default" data-action="startEdits" data-container="Description" aria-label="Left Align">
+                        <button type="button" class="btn btn-default" data-action="startEdits" data-container="Description" title="Edit JSON" aria-label="Left Align">
                             <span class="fa fa-lg fa-pencil" aria-hidden="true"></span>
                         </button>
                     </div>
@@ -660,14 +660,14 @@
                 <ul class="list-group">
                     <li class="list-group-item">Data</li>
                     <li class="list-group-item">
-                        <div class="btn-group btn-group-lg edit-controls" role="group">
-                            <button type="button" class="btn btn-default" data-clipboard-target="#dataJson" aria-label="Left Align">
+                        <div class="btn-group btn-group edit-controls" role="group">
+                            <button type="button" class="btn btn-default" data-clipboard-target="#dataJson" title="Copy JSON" aria-label="Left Align">
                               <span class="fa fa-lg fa-clipboard" aria-hidden="true"></span>
                             </button>
                             <button type="button" class="btn btn-default disabled" data-action="saveEdits" aria-label="Left Align">
                                 <span class="fa fa-lg fa-save" aria-hidden="true"></span>
                             </button>
-                            <button type="button" class="btn btn-default" data-action="startEdits" data-container="Data" aria-label="Left Align">
+                            <button type="button" class="btn btn-default" data-action="startEdits" data-container="Data" title="Edit JSON" aria-label="Left Align">
                                 <span class="fa fa-lg fa-pencil" aria-hidden="true"></span>
                             </button>
                         </div>
