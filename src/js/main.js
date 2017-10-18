@@ -8,8 +8,7 @@ require([
     "esri/IdentityManager",
     "clipboard",
     "jquery.ui",
-    "bootstrap-shim",
-    "bootstrap-notify"
+    "bootstrap-shim"
 ], function(
     jquery,
     portalSelf,
@@ -20,28 +19,6 @@ require([
     esriId,
     Clipboard
 ) {
-
-    var unsaved = {};
-    var isDirty = function() {
-        var dirty = false;
-        for (var key in unsaved) {
-            dirty = unsaved[key] || dirty;
-        }
-        return dirty;
-    };
-
-    window.onload = function() {
-        window.addEventListener("beforeunload", function(e) {
-            if (!isDirty()) {
-                return undefined;
-            }
-
-            var confirmationMessage = "It looks like you have been editing something. " +
-                                    "If you leave before saving, your changes will be lost.";
-            (e || window.event).returnValue = confirmationMessage; // Gecko + IE
-            return confirmationMessage; // Gecko + Webkit, Safari, Chrome etc.
-        });
-    };
 
     // *** ArcGIS OAuth ***
     var appInfo = new arcgisOAuthInfo({
@@ -719,6 +696,7 @@ require([
                 jsonBackup[codeBlock[0].id] = editor.getValue();
                 codeBlock.attr("contenteditable", "true");
                 editor.setReadOnly(false);
+                editor.setTheme("ace/theme/tomorrow_night");
                 editor.getSession().on("changeAnnotation", function() {
                     // Validate the JSON as it is edited.
                     if (codeBlock.attr("contenteditable") != "true") return;
@@ -743,6 +721,7 @@ require([
                 // End editing and restore the original json.
                 editor.setValue(jsonBackup[codeBlock[0].id], -1);
                 editor.setReadOnly(true);
+                editor.setTheme("ace/theme/tomorrow");
                 codeBlock.attr("contenteditable", "false");
 
                 editButton.attr("class", "btn btn-default");
@@ -769,6 +748,7 @@ require([
                     saveButton.css("color", "black");
                     codeBlock.attr("contenteditable", "false");
                     editor.setReadOnly(true);
+                    editor.setTheme("ace/theme/tomorrow");
                     editButton.attr("title", "Edit JSON").tooltip("fixTitle");
 
                     // Post the changes.
@@ -850,13 +830,12 @@ require([
              *  item.  Looks for a period in the name to indicate
              *  that it is a file based item, e.g. roads.kmz.
              */
-            var checkData = function(id, name) {
+            var checkData = function(id, name){
                 return new Promise(function(resolve, reject) {
-                    if ((!name) || ((name) && (name.indexOf(".") < 0))) {
+                    if ((!name) || ((name) && (name.indexOf('.') < 0))) {
                         resolve(portal.itemData(id));
-                    }                    else {
-                        resolve(null);
                     }
+                    else { resolve(null); }
                 });
             };
 
@@ -909,7 +888,7 @@ require([
                              * Color code the JSON to make it easier
                              * to read and edit (uses Ace editor: https://ace.c9.io/).
                              */
-                            jquery("pre").each(function(i, e) {
+                            jquery(".jsonViewer").each(function(i, e) {
                                 var editor = window.ace.edit(e.id);
                                 if (e.id == "descriptionJson") {
                                     descEditor = editor;
@@ -1454,7 +1433,6 @@ require([
 
         // Preserve the icon and label on the cloned button.
         var clone = jquery("#" + id + "_clone");
-        clone.find(".itemTitle").text("");
         var span = jquery("#" + id + "_clone > span");
 
         clone.text(name);
@@ -1463,60 +1441,10 @@ require([
         clone.append("<div class='message'><p class='messages'></p></div>");
 
         var messages = jquery("#" + id + "_clone").find(".messages");
-
-        if (!window.notifies) {
-            window.notifies = [];
-        }
-        var finishText;
-        var finishType;
-        unsaved[name] = true;
-        var notify = jquery.notify({
-            title: "<strong>" + name + "</strong>: ",
-            message: ""
-        }, {
-            type: "info",
-            allow_dismiss: false,
-            showProgressbar: true,
-            placement: {
-                from: "bottom",
-                align: "right"
-            },
-            delay: 0,
-            onClosed: function() {
-                console.log("closed", notify);
-                notify = jquery.notify({
-                    title: "<strong>" + name + "</strong>: ",
-                    message: finishText
-                }, {
-                    type: finishType,
-                    allow_dismiss: true,
-                    placement: {
-                        from: "bottom",
-                        align: "right"
-                    },
-                    delay: 0
-                });
-                window.notifies.push(notify);
-            }
-        });
-        window.notifies.push(notify);
-
-        var setMessage = function(message) {
-            messages.text(message);
-            notify.update("message", message);
-        };
-        var finishMessage = function(type, message) {
-            finishText = message;
-            finishType = type;
-            setMessage(message);
-            notify.close();
-            delete unsaved[name];
-        };
-
         serviceDescription.name = name;
         var serviceDefinition = serviceDescription;
         delete serviceDefinition.layers;
-        setMessage("Creating service");
+        messages.text("creating service");
         messages.after("<img src='css/grid.svg' class='harvester'/>");
         destinationPortal.createService(destinationPortal.username, folder, JSON.stringify(serviceDefinition)).then(function(service) {
             clone.attr("data-id", service.itemId);
@@ -1565,10 +1493,10 @@ require([
                             clone.removeClass("btn-info");
                             if (errors) {
                                 clone.addClass("btn-warning");
-                                finishMessage("danger", "Incomplete--check console");
+                                messages.text("Incomplete--check console");
                             } else {
                                 clone.addClass("btn-success");
-                                finishMessage("success", "Copy successful");
+                                messages.text("Copy OK");
                             }
                         }
                     };
@@ -1599,120 +1527,54 @@ require([
                         layer.indexes = [];
                     });
 
-                    setMessage("Updating definition");
-                    var startTime = new Date();
-                    var getTimeRemaining = function(miliseconds) {
-                        var seconds = miliseconds / 1000;
-                        var hours = Math.floor(seconds / 3600);
-                        var minutes = Math.floor((seconds - hours * 3600) / 60);
-                        seconds = Math.floor(seconds - hours * 3600 - minutes * 60);
-                        var timeRemaining;
-                        if (hours) {
-                            if (hours < 2) {
-                                timeRemaining = hours + " hours, " + minutes + " minutes";
-                            } else {
-                                timeRemaining = Math.round(hours + minutes / 60) + " hours";
-                            }
-                        } else if (minutes) {
-                            if (minutes < 2) {
-                                timeRemaining = minutes + " minutes, " + seconds + " seconds";
-                            } else {
-                                timeRemaining = Math.round(minutes + seconds / 60) + " minutes";
-                            }
-                        } else {
-                            timeRemaining = seconds + " seconds";
-                        }
-                        return timeRemaining;
-                    };
+
+                    messages.text("updating definition");
                     destinationPortal.addToServiceDefinition(service.serviceurl, JSON.stringify(definition))
                         .then(function(response) {
                             if (!("error" in response)) {
-                                var totalNumberOfRecords = 0;
-                                var numberOfFinishedRecords = 0;
-                                var totalNumberOfLayers = layers.length;
-                                var numberOfFinishedLayers = 0;
                                 jquery.each(layers, function(i, v) {
                                     var layerId = v.id;
                                     portal.layerRecordCount(description.url, layerId)
                                         .then(function(records) {
                                             var offset = 0;
                                             layerJobs[layerId].recordCount = records.count;
-                                            totalNumberOfLayers -= 1;
-                                            totalNumberOfRecords += records.count;
                                             // Set the count manually in weird cases where maxRecordCount is negative.
                                             var count = definition.layers[layerId].maxRecordCount < 1 ? 1000 : definition.layers[layerId].maxRecordCount;
-                                            console.log("Copying records, " + count + " at a time");
                                             var x = 1; // eslint-disable-line no-unused-vars
-
-
-
-                                            var totalWorkers = Math.min(Math.ceil(records.count / count), 20);
-                                            var harvestRecords = function(descUrl, lyrId, startRecord, stopRecord, numRecordsPer) {
-                                                portal.harvestRecords(descUrl, lyrId, startRecord, numRecordsPer)
-                                                .then(function(serviceData) {
-                                                    if (totalNumberOfLayers) {
-                                                        setMessage("Adding features for " + layerCount + " layers");
-                                                    } else {
-                                                        var recordsProgress = numberOfFinishedRecords / totalNumberOfRecords * 100;
-                                                        var timeRemaining = getTimeRemaining((new Date() - startTime) / recordsProgress * (100 - recordsProgress));
-                                                        notify.update("progress", recordsProgress);
-                                                        setMessage(
-                                                            "Adding features (" +
-                                                                numberOfFinishedRecords.toLocaleString("en") +
-                                                                " out of " + totalNumberOfRecords.toLocaleString("en") +
-                                                            ")" +
-                                                            (numberOfFinishedRecords ? ". About " + timeRemaining + " remaining." : "")
-                                                        );
-                                                    }
-                                                    destinationPortal.addFeatures(service.serviceurl, lyrId, JSON.stringify(serviceData.features))
-                                                        .then(function(result) {
-                                                            layerJobs[lyrId].attempted += serviceData.features.length;
-                                                            layerJobs[lyrId].added += result.addResults.length;
-                                                            numberOfFinishedRecords += result.addResults.length;
-
-                                                            var recordsProgress = numberOfFinishedRecords / totalNumberOfRecords * 100;
-                                                            var timeRemaining = getTimeRemaining((new Date() - startTime) / recordsProgress * (100 - recordsProgress));
-                                                            notify.update("progress", recordsProgress);
-                                                            setMessage(
-                                                                "Adding features (" +
-                                                                    numberOfFinishedRecords.toLocaleString("en") +
-                                                                    " out of " + totalNumberOfRecords.toLocaleString("en") +
-                                                                ")" +
-                                                                (numberOfFinishedRecords ? ". About " + timeRemaining + " remaining." : "")
-                                                            );
-
-                                                            reportResult(lyrId);
-                                                            startRecord += totalWorkers * numRecordsPer;
-                                                            if (stopRecord > startRecord) {
-                                                                numRecordsPer = (stopRecord - startRecord < numRecordsPer) ? stopRecord - startRecord : numRecordsPer;
-                                                                harvestRecords(descUrl, lyrId, startRecord, stopRecord, numRecordsPer);
-                                                            } else {
-                                                                numberOfFinishedLayers++;
-                                                            }
-                                                        })
-                                                        .catch(function() { // Catch on addFeatures.
-                                                            layerJobs[lyrId].attempted += serviceData.features.length;
-                                                            reportResult(lyrId);
-                                                        });
-                                                })
-                                                .catch(function() { // Catch on harvestRecords.
-                                                    finishMessage("danger", "Incomplete—check console");
-                                                    console.info("Errors creating service " + name);
-                                                    console.info("Failed to retrieve all records.");
-                                                });
-
-                                            };
-                                            for (var i = 0; i < totalWorkers; i++) {
-                                                harvestRecords(description.url, layerId, i * count, records.count, count, totalWorkers);
+                                            while (offset <= records.count) {
+                                                x++;
+                                                messages.text("harvesting data");
+                                                portal.harvestRecords(description.url, layerId, offset, count)
+                                                    // the linter doesn't like anonymous callback functions within loops
+                                                    /* eslint-disable no-loop-func */
+                                                    .then(function(serviceData) {
+                                                        messages.text("adding features for " + layerCount + " layers");
+                                                        destinationPortal.addFeatures(service.serviceurl, layerId, JSON.stringify(serviceData.features))
+                                                            .then(function(result) {
+                                                                layerJobs[layerId].attempted += serviceData.features.length;
+                                                                layerJobs[layerId].added += result.addResults.length;
+                                                                reportResult(layerId);
+                                                            })
+                                                            .catch(function() { // Catch on addFeatures.
+                                                                layerJobs[layerId].attempted += serviceData.features.length;
+                                                                reportResult(layerId);
+                                                            });
+                                                    })
+                                                    .catch(function() { // Catch on harvestRecords.
+                                                        messages.text("Incomplete—check console");
+                                                        console.info("Errors creating service " + name);
+                                                        console.info("Failed to retrieve all records.");
+                                                    });
+                                                    /* eslint-enable no-loop-func */
+                                                offset += count;
                                             }
-
                                         });
                                 });
                             } else {
                                 clone.find("img").remove();
                                 clone.removeClass("btn-info");
                                 clone.addClass("btn-danger");
-                                finishMessage("danger", "Failed—check console");
+                                messages.text("Failed—check console");
                                 console.info("Copy summary for " + name);
                                 console.warn(response.error.message);
                                 response.error.details.forEach(function(detail) {
@@ -1724,7 +1586,7 @@ require([
                             clone.find("img").remove();
                             clone.removeClass("btn-info");
                             clone.addClass("btn-danger");
-                            finishMessage("danger", "Failed—check console");
+                            messages.text("Failed—check console");
                             console.info("Errors creating service " + name);
                             console.warn("Failed to create the service.");
                         });
