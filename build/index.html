@@ -461,7 +461,6 @@
                     {name: "jquery.ui", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib", main: "jquery-ui-1.11.4.min"},
                     {name: "jquery.bootstrap", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib/bootstrap/js", main: "bootstrap-3.3.4.min"},
                     {name: "bootstrap-shim", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib", main: "bootstrap-shim"},
-                    {name: "bootstrap-notify", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib", main: "bootstrap-notify.min"},
                     {name: "mustache", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib", main: "mustache-0.7.2"},
                     {name: "nprogress", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib", main: "nprogress-0.1.6"},
                     {name: "clipboard", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib", main: "clipboard-1.5.15.min"},
@@ -652,7 +651,7 @@
                             <span class="fa fa-lg fa-pencil" aria-hidden="true"></span>
                         </button>
                     </div>
-                    <pre id="descriptionJson">{{ description }}</pre>
+                    <div id="descriptionJson" class="jsonViewer">{{ description }}</div>
                 </li>
             </ul>
             {{ #data }}
@@ -671,7 +670,7 @@
                                 <span class="fa fa-lg fa-pencil" aria-hidden="true"></span>
                             </button>
                         </div>
-                        <pre id="dataJson">{{ data }}</pre>
+                        <div id="dataJson" class="jsonViewer">{{ data }}</div>
                     </li>
                 </ul>
             {{ /data }}
