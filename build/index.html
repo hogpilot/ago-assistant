@@ -10,7 +10,6 @@
         <link rel="stylesheet" href="js/lib/bootstrap/css/bootstrap-3.3.4.min.css"/>
         <link rel="stylesheet" href="css/styles.css"/>
         <link rel="stylesheet" href="js/lib/nprogress.css" />
-        <link rel="stylesheet" href="js/lib/tomorrow.min.css">
         <link rel="stylesheet" href="css/font-awesome/css/font-awesome-4.2.0.min.css">
         <link rel="shortcut icon" href="assets/images/favicon.ico">
     </head>
@@ -104,7 +103,7 @@
                 </div>
             </div>
         </div>
-        <div class="container col-md-10 center">
+        <div id="mainContainer" class="container center">
             <!-- About modal -->
             <div id="aboutModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="aboutModalLabel" aria-hidden="true">
                 <div class="modal-dialog">
@@ -447,7 +446,7 @@
                 <div id="itemsArea" class="col-xs-5 itemArea">
                     <!-- content goes here -->
                 </div>
-                <div id="dropArea" class="col-xs-7 itemArea">
+                <div id="dropArea" class="itemArea">
                     <!-- dropped items will go here -->
                 </div>
             </div>
@@ -461,6 +460,7 @@
                     {name: "jquery.ui", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib", main: "jquery-ui-1.11.4.min"},
                     {name: "jquery.bootstrap", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib/bootstrap/js", main: "bootstrap-3.3.4.min"},
                     {name: "bootstrap-shim", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib", main: "bootstrap-shim"},
+                    {name: "bootstrap-notify", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib", main: "bootstrap-notify.min"},
                     {name: "mustache", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib", main: "mustache-0.7.2"},
                     {name: "nprogress", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib", main: "nprogress-0.1.6"},
                     {name: "clipboard", location: location.pathname.replace(/\/[^/]*$/, '') + "/js/lib", main: "clipboard-1.5.15.min"},
@@ -481,9 +481,7 @@
     <ul class="nav navbar-nav navbar-right" id="sessionDropdown">
         <li class="dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                {{#user}}
-                    {{fullName}} ({{username}})
-                {{/user}}
+                {{#user}}{{fullName}} ({{username}}){{/user}}
             <b class="caret"></b></a>
             <ul class="dropdown-menu">
                 <li>
@@ -590,9 +588,12 @@
 
 <script type="text/template" id="contentTemplate">
 
-    <div id="{{ id }}" class="btn btn-default btn-block content" style="opacity: 1;" type="button" data-id="{{ id }}" data-type="{{ type }}" data-portal="{{ portal }}">
-        <span class="icon {{ icon }}"></span>
-        <span class="itemTitle">{{ title }}</span>
+    <div id="{{ id }}" class="btn btn-default btn-block content content-item" style="opacity: 1;" type="button" data-id="{{ id }}" data-type="{{ type }}" data-portal="{{ portal }}">
+        <div class="itemHeader">
+            <span class="icon {{ icon }}"></span>
+            <span class="itemTitle">{{ title }}</span>
+            <div class="copyInProgress" style="display:none;"><em>Copying</em> <img src='css/grid.svg' class='harvestCopier'/></div>
+        </div>
         <div class="itemDetailsDiv">
             <span class="itemType">
                 <strong>Type:</strong> {{ agoType }}
@@ -603,7 +604,6 @@
             <span class="itemId">
                 | <strong>Item ID:</strong>
                 <a href="{{ idLink }}" target="_blank"><abbr title="{{ id }}">{{ idAbbrev }}</abbr></a>
-                <div class="copyInProgress" style="display:none;"><em>Copying</em> <img src='css/grid.svg' class='harvestCopier'/></div>
             </span>
         </div>
     </div>
@@ -742,7 +742,7 @@
         <div class="panel-heading">
             <h2 class="panel-title">{{ webmapTitle }}</h2>
         </div>
-        <div class="panel-body" id="itemDescription>
+        <div class="panel-body" id="itemDescription">
             <form role="form">
                 <h5>Quick Text Find/Replace</h5>
                 <form class="form-inline">
@@ -812,7 +812,7 @@
 
 <script type="text/template" id="updateSuccessTemplate">
 
-    <div class="alert alert-success alert-dismissable" style="position: absolute; z-index: 99"">
+    <div class="alert alert-success alert-dismissable" style="position: absolute; z-index: 99">
         <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
         <strong>Success!</strong>
     </div>
@@ -834,7 +834,7 @@
         <div class="panel-heading">
             <h2 class="panel-title">{{ title }}</h2>
         </div>
-        <div class="panel-body" id="itemDescription>
+        <div class="panel-body" id="itemDescription">
             <form role="form">
                 <div class="form-group">
                     <div class="form-group">
